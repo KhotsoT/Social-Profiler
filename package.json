@@ -1,0 +1,30 @@
+{
+  "name": "social-profiler",
+  "version": "1.0.0",
+  "description": "Intelligent Influencer Marketing Platform with True Follower Analytics",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "services"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn dev:backend\" \"yarn dev:frontend\"",
+    "dev:frontend": "cd frontend && yarn dev",
+    "dev:backend": "cd backend && yarn dev",
+    "build": "yarn build:backend && yarn build:frontend",
+    "build:frontend": "cd frontend && yarn build",
+    "build:backend": "cd backend && yarn build",
+    "test": "yarn test:backend && yarn test:frontend",
+    "test:backend": "cd backend && yarn test",
+    "test:frontend": "cd frontend && yarn test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "yarn": ">=1.22.0"
+  }
+}
+

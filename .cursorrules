@@ -1,0 +1,137 @@
+# Development Workflow Rules - Social Profiler
+
+## MANDATORY: Package Manager
+**ALWAYS use Yarn, NEVER use npm:**
+- ✅ Use `yarn install` (NOT `npm install`)
+- ✅ Use `yarn add <package>` (NOT `npm install <package>`)
+- ✅ Use `yarn remove <package>` (NOT `npm uninstall <package>`)
+- ✅ Use `yarn dev` (NOT `npm run dev`)
+- ✅ Use `yarn build` (NOT `npm run build`)
+- ✅ Use `yarn` commands in all scripts and documentation
+- ❌ NEVER use `npm` commands in this project
+
+## MANDATORY PRE-BUILD CHECK
+**NEVER build or deploy without running these checks first:**
+
+1. **Check for Linter Errors**: Run `read_lints` on any files you've modified
+2. **Check for TypeScript Errors**: Verify TypeScript compilation with `tsc --noEmit` (or let the build process catch it)
+3. **Fix ALL errors before building**: Zero tolerance for errors in production builds
+4. **If errors are found**: Fix them immediately, DO NOT proceed with build until ALL errors are resolved
+
+## MANDATORY PRE-PUSH CHECK
+**NEVER push to git without ensuring backend builds successfully:**
+
+1. **Backend Build Check**: Before pushing to git, ALWAYS run backend build to catch TypeScript errors
+   - Navigate to backend: `cd backend`
+   - Run build: `yarn build` or `tsc` (TypeScript compilation)
+   - If build fails: Fix ALL TypeScript errors before pushing
+   - This prevents broken code from reaching production and blocking deployment
+2. **Frontend Build Check** (if frontend files changed): Run `yarn build` in frontend directory
+3. **Zero Tolerance**: Do NOT push if build fails - fix errors first
+4. **Why This Matters**: Deployment platforms build on push. Broken builds = failed deployments = wasted time
+
+## Build Process
+When user requests a build:
+1. First: Check for linter errors using `read_lints`
+2. If errors exist: Show them to user and fix before proceeding
+3. If no errors: Proceed with build
+4. Never skip error checking to save time
+
+## Git Push Process
+Before pushing to git (especially for backend changes):
+1. **ALWAYS build backend first**: `cd backend && yarn build` or `tsc`
+2. **Verify build succeeds**: No TypeScript compilation errors
+3. **If build fails**: Fix errors, rebuild, then push
+4. **Never push broken builds**: This blocks deployment and wastes time debugging in production
+
+This rule prevents deployment of broken code and saves debugging time.
+
+## Project Structure
+- `backend/` - Express/TypeScript API server
+- `frontend/` - Next.js/React web application
+- `database/` - PostgreSQL schemas and migrations
+- `docs/` - Documentation (competitive analysis, API docs, feature roadmap)
+- `services/` - Microservices (future - AI analytics, etc.)
+
+## Code Standards
+- **TypeScript**: Use TypeScript for all new code, strict mode enabled
+- **Error Handling**: Always use try-catch blocks, proper error responses
+- **Logging**: Use Winston logger for backend, console for frontend dev
+- **API Design**: RESTful APIs, consistent response formats
+- **Database**: Use PostgreSQL, proper migrations, no direct SQL in code
+- **Testing**: Write tests for critical paths (to be implemented)
+
+## Social Media API Integration Rules
+- Always handle rate limiting
+- Implement retry logic with exponential backoff
+- Cache API responses when possible
+- Store API credentials securely (environment variables)
+- Handle API errors gracefully with user-friendly messages
+- Log all API calls for debugging
+
+## Follower Deduplication Rules
+- Always calculate true followers when influencer has multiple platforms
+- Use multiple matching strategies (username, email, image hash, bio)
+- Cache deduplication results to avoid recalculation
+- Log deduplication confidence scores for debugging
+- Handle edge cases (missing data, API failures)
+
+## Influencer Categorization Rules
+- Categorize on create and update
+- Re-categorize when follower counts change significantly
+- Store categories as array in database
+- Use consistent category naming (kebab-case)
+- Update categories asynchronously to avoid blocking API calls
+
+## Documentation Requirements
+- Update `nextSteps.md` after major feature completion
+- Update API documentation when endpoints change
+- Keep README.md current with setup instructions
+- Document all environment variables in `.env.example`
+- Add code comments for complex algorithms (deduplication, categorization)
+
+## Before Starting Work
+1. ✅ Check `nextSteps.md` for current priorities
+2. ✅ Check `docs/` folder for relevant documentation
+3. ✅ Run `read_lints` to check for existing errors
+4. ✅ Review `.cursorrules` for project standards
+
+## During Work
+1. ✅ Use Yarn (not npm) for all package management
+2. ✅ Follow TypeScript strict mode
+3. ✅ Use proper error handling
+4. ✅ Commit frequently with descriptive messages
+5. ✅ Test API endpoints if backend changes
+6. ✅ Test UI if frontend changes
+
+## After Completing Work
+1. ✅ **MANDATORY: Run `read_lints` to verify no new errors** - MUST be done before providing summary
+2. ✅ Fix ALL linter errors before summarizing work
+3. ✅ Build backend: `cd backend && yarn build`
+4. ✅ Build frontend: `cd frontend && yarn build` (if frontend changed)
+5. ✅ Update `nextSteps.md` if priorities change
+6. ✅ Update relevant documentation
+7. ✅ Commit and push changes
+
+## MANDATORY PRE-SUMMARY CHECK
+**NEVER provide a work summary without first:**
+1. Running `read_lints` on all modified files/directories
+2. Fixing ALL linter errors found
+3. Verifying zero errors before summarizing
+4. If errors cannot be fixed immediately, note them clearly in the summary
+
+**This rule prevents shipping broken code and ensures code quality.**
+
+## Environment Variables
+- Never commit `.env` files
+- Always update `.env.example` when adding new variables
+- Document all required variables in `SETUP.md`
+- Use environment-specific configurations (dev, staging, prod)
+
+## Database Migrations
+- Always use migrations for schema changes
+- Never modify production database directly
+- Test migrations on development database first
+- Keep migration files in `database/` directory
+- Document breaking changes in migration files
+

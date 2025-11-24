@@ -1,0 +1,33 @@
+# Fly.io configuration for backend deployment
+# Run: fly launch (first time) or fly deploy (updates)
+
+app = "social-profiler-backend"
+primary_region = "iad"  # Change to your preferred region
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3001"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0  # Allow machines to stop when idle to save trial hours (or delete Fly.io if localhost works)
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256  # Reduced to fit free tier better (free tier allows 256MB per VM)
+

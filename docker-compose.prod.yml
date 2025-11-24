@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: social-profiler-backend-prod
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # These should be set in your deployment platform
+      # DATABASE_URL: ${DATABASE_URL}
+      # BACKEND_URL: ${BACKEND_URL}
+      # TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID}
+      # TWITTER_CLIENT_SECRET: ${TWITTER_CLIENT_SECRET}
+      # ... other env vars
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
