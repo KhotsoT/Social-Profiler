@@ -16,6 +16,21 @@ interface UserInfo {
   email?: string;
 }
 
+// In-memory store for OAuth state -> code_verifier mapping
+// In production, use Redis or database
+const oauthStateStore = new Map<string, { codeVerifier: string; timestamp: number }>();
+
+// Clean up old entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  const maxAge = 10 * 60 * 1000; // 10 minutes
+  for (const [state, data] of oauthStateStore.entries()) {
+    if (now - data.timestamp > maxAge) {
+      oauthStateStore.delete(state);
+    }
+  }
+}, 10 * 60 * 1000);
+
 export class OAuthService {
   /**
    * Instagram OAuth
@@ -118,7 +133,23 @@ export class OAuthService {
       `code_challenge=${codeChallenge}&` +
       `code_challenge_method=S256`;
 
+    // Store codeVerifier with state for callback retrieval
+    oauthStateStore.set(state, { codeVerifier, timestamp: Date.now() });
+
     return { authUrl, codeVerifier };
+  }
+
+  /**
+   * Get code verifier by state (for callback)
+   */
+  getCodeVerifierByState(state: string): string | null {
+    const data = oauthStateStore.get(state);
+    if (!data) {
+      return null;
+    }
+    // Clean up after use
+    oauthStateStore.delete(state);
+    return data.codeVerifier;
   }
 
   async exchangeTwitterCode(code: string, redirectUri: string, codeVerifier: string): Promise<OAuthTokens> {

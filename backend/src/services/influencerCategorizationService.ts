@@ -37,7 +37,7 @@ export class InfluencerCategorizationService {
 
     // Growth rate category
     const growthCategory = await this.categorizeByGrowthRate(influencer);
-    if (growthCategory) categories.push(growthCategory);
+    if (growthCategory) categories.push(growthCategory.replace('growth-', '')); // Simplified: "stable", "rising", etc.
 
     // Engagement category
     const engagementCategory = this.categorizeByEngagement(influencer);
@@ -53,7 +53,7 @@ export class InfluencerCategorizationService {
 
     // Authenticity category
     const authenticityCategory = await this.categorizeByAuthenticity(influencer);
-    if (authenticityCategory) categories.push(authenticityCategory);
+    if (authenticityCategory) categories.push(authenticityCategory.replace('authenticity-', '')); // Simplified: "organic", "verified", "suspicious"
 
     // Cross-platform category
     if (influencer.socialAccounts.length > 1) {
@@ -78,7 +78,7 @@ export class InfluencerCategorizationService {
 
     for (const [tier, range] of Object.entries(this.FOLLOWER_TIERS)) {
       if (totalFollowers >= range.min && totalFollowers < range.max) {
-        return `tier-${tier.toLowerCase()}`;
+        return tier.toLowerCase(); // Simplified: "nano", "micro", "macro", etc.
       }
     }
 
@@ -106,16 +106,18 @@ export class InfluencerCategorizationService {
    * Categorize by engagement rate
    */
   private categorizeByEngagement(influencer: Influencer): string | null {
+    if (influencer.socialAccounts.length === 0) return null;
+    
     const avgEngagement = influencer.socialAccounts.reduce(
       (sum, acc) => sum + acc.engagementRate, 0
     ) / influencer.socialAccounts.length;
 
     if (avgEngagement >= this.ENGAGEMENT_THRESHOLDS.HIGH) {
-      return 'engagement-high';
+      return 'high-engagement';
     } else if (avgEngagement >= this.ENGAGEMENT_THRESHOLDS.MEDIUM) {
-      return 'engagement-medium';
+      return 'medium-engagement';
     } else {
-      return 'engagement-low';
+      return 'low'; // Simplified
     }
   }
 
@@ -126,7 +128,7 @@ export class InfluencerCategorizationService {
     const categories: string[] = [];
     
     influencer.socialAccounts.forEach(account => {
-      categories.push(`platform-${account.platform}`);
+      categories.push(account.platform); // Simplified: "twitter", "instagram", etc.
       
       if (account.verified) {
         categories.push('verified');

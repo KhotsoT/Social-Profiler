@@ -311,9 +311,25 @@ export class InfluencerService {
       throw new Error('Influencer not found');
     }
 
+    const totalFollowers = influencer.socialAccounts.reduce((sum, acc) => sum + acc.followerCount, 0);
+    
+    // Calculate true followers: if single platform, use that platform's count
+    let trueFollowers = influencer.trueFollowerCount || 0;
+    if (influencer.socialAccounts.length === 1) {
+      trueFollowers = influencer.socialAccounts[0].followerCount;
+      // Update database if different
+      if (influencer.trueFollowerCount !== trueFollowers) {
+        await this.repository.update(id, { trueFollowerCount: trueFollowers });
+      }
+    } else if (influencer.socialAccounts.length > 1 && (!influencer.trueFollowerCount || influencer.trueFollowerCount === 0)) {
+      // Multiple platforms but no calculated value - calculate it
+      trueFollowers = await this.deduplicationService.calculateTrueFollowers(influencer.socialAccounts);
+      await this.repository.update(id, { trueFollowerCount: trueFollowers });
+    }
+
     return {
-      totalFollowers: influencer.socialAccounts.reduce((sum, acc) => sum + acc.followerCount, 0),
-      trueFollowers: influencer.trueFollowerCount || 0,
+      totalFollowers,
+      trueFollowers,
       platforms: influencer.socialAccounts.length,
       averageEngagementRate: this.calculateAverageEngagement(influencer.socialAccounts),
       growthTrend: await this.socialMediaService.getGrowthTrend(id),
@@ -327,32 +343,48 @@ export class InfluencerService {
       throw new Error('Influencer not found');
     }
 
-    if (influencer.trueFollowerCount !== undefined) {
+    const totalFollowerCount = influencer.socialAccounts.reduce(
+      (sum, acc) => sum + acc.followerCount, 0
+    );
+
+    // If only one platform, true followers = that platform's followers
+    if (influencer.socialAccounts.length === 1) {
+      const trueFollowers = influencer.socialAccounts[0].followerCount;
+      // Update database if different
+      if (influencer.trueFollowerCount !== trueFollowers) {
+        await this.repository.update(id, { trueFollowerCount: trueFollowers });
+      }
+      return {
+        trueFollowerCount: trueFollowers,
+        totalFollowerCount,
+        deduplicationRate: '0.00%',
+      };
+    }
+
+    // Multiple platforms - use stored value or calculate
+    if (influencer.trueFollowerCount !== undefined && influencer.trueFollowerCount !== null && influencer.trueFollowerCount > 0) {
       return {
         trueFollowerCount: influencer.trueFollowerCount,
-        totalFollowerCount: influencer.socialAccounts.reduce(
-          (sum, acc) => sum + acc.followerCount, 0
-        ),
+        totalFollowerCount,
         deduplicationRate: (
-          (1 - influencer.trueFollowerCount / 
-            influencer.socialAccounts.reduce((sum, acc) => sum + acc.followerCount, 0)) * 100
+          (1 - influencer.trueFollowerCount / totalFollowerCount) * 100
         ).toFixed(2) + '%',
       };
     }
 
-    // Calculate on the fly
+    // Calculate on the fly for multiple platforms
     const trueFollowers = await this.deduplicationService.calculateTrueFollowers(
       influencer.socialAccounts
     );
 
+    // Update database with calculated value
+    await this.repository.update(id, { trueFollowerCount: trueFollowers });
+
     return {
       trueFollowerCount: trueFollowers,
-      totalFollowerCount: influencer.socialAccounts.reduce(
-        (sum, acc) => sum + acc.followerCount, 0
-      ),
+      totalFollowerCount,
       deduplicationRate: (
-        (1 - trueFollowers / 
-          influencer.socialAccounts.reduce((sum, acc) => sum + acc.followerCount, 0)) * 100
+        (1 - trueFollowers / totalFollowerCount) * 100
       ).toFixed(2) + '%',
     };
   }

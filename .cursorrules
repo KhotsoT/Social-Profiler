@@ -18,6 +18,23 @@
 3. **Fix ALL errors before building**: Zero tolerance for errors in production builds
 4. **If errors are found**: Fix them immediately, DO NOT proceed with build until ALL errors are resolved
 
+## MANDATORY: RESTART BOTH SERVERS AFTER ANY CODE CHANGE
+**NEVER make code changes without restarting BOTH servers:**
+
+1. **After ANY code change** (backend OR frontend), you MUST:
+   - Stop ALL Node processes
+   - Restart backend: `cd backend && yarn dev`
+   - Restart frontend: `cd frontend && yarn dev`
+2. **This applies to:**
+   - Backend code changes (controllers, services, routes, etc.)
+   - Frontend code changes (components, pages, API calls, etc.)
+   - Environment variable changes (.env file)
+   - Configuration changes (next.config.js, tsconfig.json, etc.)
+3. **Zero Tolerance**: Do NOT skip server restarts - changes won't be active until servers restart
+4. **Why This Matters**: Code changes only take effect after server restart. Skipping restarts = broken features and wasted debugging time.
+
+**ALWAYS restart BOTH servers after making changes. NO EXCEPTIONS.**
+
 ## MANDATORY PRE-PUSH CHECK
 **NEVER push to git without ensuring backend builds successfully:**
 
@@ -103,15 +120,17 @@ This rule prevents deployment of broken code and saves debugging time.
 4. ✅ Commit frequently with descriptive messages
 5. ✅ Test API endpoints if backend changes
 6. ✅ Test UI if frontend changes
+7. ✅ **MANDATORY: After ANY code change, restart BOTH backend AND frontend servers**
 
 ## After Completing Work
 1. ✅ **MANDATORY: Run `read_lints` to verify no new errors** - MUST be done before providing summary
 2. ✅ Fix ALL linter errors before summarizing work
-3. ✅ Build backend: `cd backend && yarn build`
-4. ✅ Build frontend: `cd frontend && yarn build` (if frontend changed)
-5. ✅ Update `nextSteps.md` if priorities change
-6. ✅ Update relevant documentation
-7. ✅ Commit and push changes
+3. ✅ **MANDATORY: Restart BOTH servers after ANY code change** - Backend AND Frontend MUST be restarted
+4. ✅ Build backend: `cd backend && yarn build`
+5. ✅ Build frontend: `cd frontend && yarn build` (if frontend changed)
+6. ✅ Update `nextSteps.md` if priorities change
+7. ✅ Update relevant documentation
+8. ✅ Commit and push changes
 
 ## MANDATORY PRE-SUMMARY CHECK
 **NEVER provide a work summary without first:**

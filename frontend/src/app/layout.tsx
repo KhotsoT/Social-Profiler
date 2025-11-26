@@ -1,12 +1,25 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Space_Grotesk } from 'next/font/google'
 import './globals.css'
+import { Navigation } from '@/components/Navigation'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { CurrencyProvider } from '@/contexts/CurrencyContext'
+import { CurrencyPrompt } from '@/components/CurrencyPrompt'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+})
+
+const spaceGrotesk = Space_Grotesk({ 
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+})
 
 export const metadata: Metadata = {
-  title: 'Social Profiler - Intelligent Influencer Marketing Platform',
-  description: 'Discover, analyze, and collaborate with influencers across all social media platforms',
+  title: 'CreatorPay - Global Influencer Marketing Platform',
+  description: 'Connect global brands with local audiences. Post and get paid - the easiest way for creators to monetize their influence.',
+  keywords: ['influencer marketing', 'social media', 'creator economy', 'campaign management', 'global marketing'],
 }
 
 export default function RootLayout({
@@ -15,12 +28,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body className={`${inter.className} antialiased`}>
+        <ErrorBoundary>
+          <CurrencyProvider>
+            <Navigation />
+            <main>{children}</main>
+            <CurrencyPrompt />
+          </CurrencyProvider>
+        </ErrorBoundary>
+      </body>
     </html>
   )
 }
-
-
-
-

@@ -1,10 +1,22 @@
 import { Pool, PoolConfig } from 'pg';
 import { logger } from '../utils/logger';
 
-let pool: Pool | null = null;
+let poolInstance: Pool | null = null;
+
+// Export pool getter for services that need direct access
+export const pool = {
+  query: async (text: string, params?: unknown[]) => {
+    const db = getDatabasePool();
+    return db.query(text, params);
+  },
+  connect: async () => {
+    const db = getDatabasePool();
+    return db.connect();
+  },
+};
 
 export function getDatabasePool(): Pool {
-  if (!pool) {
+  if (!poolInstance) {
     const config: PoolConfig = {
       connectionString: process.env.DATABASE_URL,
       max: 20,
@@ -12,14 +24,14 @@ export function getDatabasePool(): Pool {
       connectionTimeoutMillis: 2000,
     };
 
-    pool = new Pool(config);
+    poolInstance = new Pool(config);
 
-    pool.on('error', (err) => {
+    poolInstance.on('error', (err) => {
       logger.error('Unexpected error on idle client', err);
     });
 
     // Test connection
-    pool.query('SELECT NOW()', (err, res) => {
+    poolInstance.query('SELECT NOW()', (err, res) => {
       if (err) {
         logger.error('Database connection failed', err);
       } else {
@@ -28,13 +40,13 @@ export function getDatabasePool(): Pool {
     });
   }
 
-  return pool;
+  return poolInstance;
 }
 
 export async function closeDatabasePool(): Promise<void> {
-  if (pool) {
-    await pool.end();
-    pool = null;
+  if (poolInstance) {
+    await poolInstance.end();
+    poolInstance = null;
     logger.info('Database pool closed');
   }
 }

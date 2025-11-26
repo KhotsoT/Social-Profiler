@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Instagram, Twitter, Music, Facebook, Youtube, Linkedin, CheckCircle } from 'lucide-react'
 import { api } from '@/lib/api'
@@ -36,70 +36,7 @@ export default function RegisterPage() {
     setError(null)
   }
 
-  const handleConnectPlatform = async (platform: string) => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Get OAuth URL from backend
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-      const response = await fetch(`${apiUrl}/api/auth/${platform}`)
-      const data = await response.json()
-
-      if (!data.authUrl) {
-        throw new Error('Failed to get authorization URL')
-      }
-
-      // Store state, code verifier, and form data in sessionStorage
-      sessionStorage.setItem('oauth_state', data.state)
-      sessionStorage.setItem('oauth_platform', platform)
-      sessionStorage.setItem('register_data', JSON.stringify(formData))
-      if (data.codeVerifier) {
-        sessionStorage.setItem('oauth_code_verifier', data.codeVerifier)
-      }
-
-      // Redirect to OAuth provider
-      window.location.href = data.authUrl
-    } catch (err: any) {
-      setError(err.message || `Failed to connect ${platform}`)
-      setLoading(false)
-    }
-  }
-
-  // Check if we're returning from OAuth callback
-  if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search)
-    const code = urlParams.get('code')
-    const platform = urlParams.get('platform')
-
-    if (code && platform && step === 'connect') {
-      // Handle OAuth callback
-      handleOAuthCallback(code, platform)
-    }
-  }
-
-  const handleSkipAndCreate = async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Create influencer account without social accounts
-      // User can connect platforms later from their profile page
-      const influencer = await api.createInfluencer({
-        name: formData.name,
-        email: formData.email,
-        socialAccounts: [], // Empty - can be added later
-      })
-
-      // Redirect to influencer page where they can connect accounts later
-      router.push(`/influencers/${influencer.id}`)
-    } catch (err: any) {
-      setError(err.message || 'Failed to create account')
-      setLoading(false)
-    }
-  }
-
-  const handleOAuthCallback = async (code: string, platform: string) => {
+  const handleOAuthCallback = useCallback(async (code: string, platform: string) => {
     setLoading(true)
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -134,6 +71,70 @@ export default function RegisterPage() {
       }
     } catch (err: any) {
       setError(err.message || 'Failed to complete connection')
+      setLoading(false)
+    }
+  }, [router])
+
+  // Check if we're returning from OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const code = urlParams.get('code')
+    const platform = urlParams.get('platform')
+
+    if (code && platform) {
+      // Set step to connect and handle callback
+      setStep('connect')
+      handleOAuthCallback(code, platform)
+    }
+  }, [handleOAuthCallback])
+
+  const handleConnectPlatform = async (platform: string) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Get OAuth URL from backend
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      const response = await fetch(`${apiUrl}/api/auth/${platform}`)
+      const data = await response.json()
+
+      if (!data.authUrl) {
+        throw new Error('Failed to get authorization URL')
+      }
+
+      // Store state, code verifier, and form data in sessionStorage
+      sessionStorage.setItem('oauth_state', data.state)
+      sessionStorage.setItem('oauth_platform', platform)
+      sessionStorage.setItem('register_data', JSON.stringify(formData))
+      if (data.codeVerifier) {
+        sessionStorage.setItem('oauth_code_verifier', data.codeVerifier)
+      }
+
+      // Redirect to OAuth provider
+      window.location.href = data.authUrl
+    } catch (err: any) {
+      setError(err.message || `Failed to connect ${platform}`)
+      setLoading(false)
+    }
+  }
+
+  const handleSkipAndCreate = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Create influencer account without social accounts
+      // User can connect platforms later from their profile page
+      const influencer = await api.createInfluencer({
+        name: formData.name,
+        email: formData.email,
+        socialAccounts: [], // Empty - can be added later
+      })
+
+      // Redirect to influencer page where they can connect accounts later
+      router.push(`/influencers/${influencer.id}`)
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account')
       setLoading(false)
     }
   }

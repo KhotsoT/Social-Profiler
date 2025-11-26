@@ -403,13 +403,24 @@ export class InfluencerRepository {
           account.lastSyncedAt || new Date(),
         ]);
       } else {
-        // Insert new account
+        // Insert new account or update if exists (ON CONFLICT)
         const insertSql = `
           INSERT INTO social_accounts (
             influencer_id, platform, username, platform_id,
             follower_count, following_count, post_count,
             engagement_rate, verified, profile_url, last_synced_at
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          ON CONFLICT (influencer_id, platform) DO UPDATE SET
+            username = EXCLUDED.username,
+            platform_id = EXCLUDED.platform_id,
+            follower_count = EXCLUDED.follower_count,
+            following_count = EXCLUDED.following_count,
+            post_count = EXCLUDED.post_count,
+            engagement_rate = EXCLUDED.engagement_rate,
+            verified = EXCLUDED.verified,
+            profile_url = EXCLUDED.profile_url,
+            last_synced_at = EXCLUDED.last_synced_at,
+            updated_at = CURRENT_TIMESTAMP
         `;
         await client.query(insertSql, [
           influencerId,

@@ -3,7 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { join } from 'path';
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { apiRateLimit } from './middleware/rateLimit';
 import { logger } from './utils/logger';
 import { influencerRoutes } from './routes/influencer';
 import { analyticsRoutes } from './routes/analytics';
@@ -11,6 +12,11 @@ import { campaignRoutes } from './routes/campaign';
 import { healthRoutes } from './routes/health';
 import { adminRoutes } from './routes/admin';
 import { authRoutes } from './routes/auth';
+import { userRoutes } from './routes/user';
+import currencyRoutes from './routes/currency';
+import walletRoutes from './routes/wallet';
+import companyRoutes from './routes/company';
+import ratesRoutes from './routes/rates';
 import { getDatabasePool, closeDatabasePool } from './config/database';
 
 // Load .env from root directory
@@ -55,21 +61,32 @@ app.use((req, res, next) => {
   next();
 });
 
+// Rate limiting for API routes (skip health checks)
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health') {
+    return next();
+  }
+  return apiRateLimit(req, res, next);
+});
+
 // Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/influencers', influencerRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', currencyRoutes);  // /api/currencies, /api/countries, /api/exchange-rates
+app.use('/api/wallet', walletRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/rates', ratesRoutes);
+
+// 404 handler
+app.use(notFoundHandler);
 
 // Error handling
 app.use(errorHandler);
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
 
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);

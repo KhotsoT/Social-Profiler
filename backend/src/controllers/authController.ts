@@ -106,7 +106,13 @@ export class AuthController {
         return;
       }
 
-      if (!code_verifier) {
+      // Try to get code_verifier from query param first, then from state store
+      let codeVerifier = code_verifier as string | undefined;
+      if (!codeVerifier && state) {
+        codeVerifier = this.oauthService.getCodeVerifierByState(state as string) || undefined;
+      }
+
+      if (!codeVerifier) {
         res.status(400).json({ error: 'Code verifier missing. Please include it from the initial OAuth request.' });
         return;
       }
@@ -114,20 +120,23 @@ export class AuthController {
       const tokens = await this.oauthService.exchangeTwitterCode(
         code as string,
         `${process.env.BACKEND_URL || 'http://localhost:3001'}/api/auth/twitter/callback`,
-        code_verifier as string
+        codeVerifier
       );
 
       const userInfo = await this.oauthService.getTwitterUserInfo(tokens.access_token);
 
-      res.json({
-        success: true,
-        platform: 'twitter',
-        username: userInfo.username,
-        userId: userInfo.id,
-        accessToken: tokens.access_token,
-        expiresIn: tokens.expires_in,
-        message: 'Twitter account connected successfully',
-      });
+      // Store OAuth data temporarily (in production, use Redis or database)
+      // For now, encode in redirect URL
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const redirectUrl = `${frontendUrl}/influencers/connect/callback?` +
+        `platform=twitter&` +
+        `code=${code}&` +
+        `username=${encodeURIComponent(userInfo.username)}&` +
+        `userId=${encodeURIComponent(userInfo.id)}&` +
+        `accessToken=${encodeURIComponent(tokens.access_token)}&` +
+        `state=${state || ''}`;
+
+      res.redirect(redirectUrl);
     } catch (error: any) {
       logger.error('Twitter OAuth callback error:', error);
       res.status(500).json({

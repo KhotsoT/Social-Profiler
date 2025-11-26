@@ -8,6 +8,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "init-db": "tsx scripts/init-db.ts",
     "remove-duplicates": "tsx scripts/remove-duplicates.ts",
     "migrate": "node-pg-migrate",
