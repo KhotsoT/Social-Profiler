@@ -310,30 +310,28 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Guaranteed correct symbols
+  const SYMBOL_MAP: Record<string, string> = {
+    'USD': '$', 'ZAR': 'R', 'EUR': '€', 'GBP': '£', 'NGN': '₦', 
+    'KES': 'KSh', 'AED': 'د.إ', 'AUD': 'A$', 'BRL': 'R$', 'CAD': 'C$',
+    'GHS': 'GH₵', 'INR': '₹', 'JPY': '¥', 'CNY': '¥',
+  };
+
   const getCurrencySymbol = useCallback((code: string): string => {
-    const currency = currencies.find(c => c.code === code);
-    return currency?.symbol || code;
-  }, [currencies]);
+    return SYMBOL_MAP[code] || code;
+  }, []);
 
   const formatAmount = useCallback((amount: number, currencyCode?: string): string => {
     const code = currencyCode || selectedCurrency;
-    const currency = currencies.find(c => c.code === code);
+    const symbol = SYMBOL_MAP[code] || code;
     
-    if (!currency) {
-      return `${code} ${amount.toFixed(2)}`;
-    }
-
     const formatted = amount.toLocaleString('en-US', {
-      minimumFractionDigits: currency.decimalPlaces,
-      maximumFractionDigits: currency.decimalPlaces,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
 
-    if (currency.symbolPosition === 'before') {
-      return `${currency.symbol}${formatted}`;
-    } else {
-      return `${formatted} ${currency.symbol}`;
-    }
-  }, [currencies, selectedCurrency]);
+    return `${symbol}${formatted}`;
+  }, [selectedCurrency]);
 
   return (
     <CurrencyContext.Provider

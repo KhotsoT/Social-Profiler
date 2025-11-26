@@ -55,8 +55,19 @@ export function CurrencySelector({ className = '', showLabel = true, size = 'md'
 }
 
 // Compact version for navbar
+// Symbol lookup for display - guaranteed correct symbols
+export const CURRENCY_SYMBOLS: Record<string, string> = {
+  'USD': '$', 'ZAR': 'R', 'EUR': '€', 'GBP': '£', 'NGN': '₦', 
+  'KES': 'KSh', 'AED': 'د.إ', 'AUD': 'A$', 'BRL': 'R$', 'CAD': 'C$',
+  'GHS': 'GH₵', 'INR': '₹', 'JPY': '¥', 'CNY': '¥',
+};
+
+export function getSymbol(code: string): string {
+  return CURRENCY_SYMBOLS[code] || code;
+}
+
 export function CurrencySelectorCompact({ className = '' }: { className?: string }) {
-  const { currencies, selectedCurrency, setSelectedCurrency, getCurrencySymbol } = useCurrency();
+  const { currencies, selectedCurrency, setSelectedCurrency } = useCurrency();
 
   return (
     <select
@@ -66,7 +77,7 @@ export function CurrencySelectorCompact({ className = '' }: { className?: string
         text-sm py-1.5 px-2 rounded-md
         bg-transparent border border-gray-300 dark:border-gray-600
         text-gray-700 dark:text-gray-300
-        hover:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+        hover:border-emerald-500 focus:ring-1 focus:ring-emerald-500
         cursor-pointer transition-colors
         ${className}
       `}
@@ -74,7 +85,7 @@ export function CurrencySelectorCompact({ className = '' }: { className?: string
     >
       {currencies.map((currency) => (
         <option key={currency.code} value={currency.code}>
-          {currency.symbol} {currency.code}
+          {getSymbol(currency.code)} {currency.code}
         </option>
       ))}
     </select>

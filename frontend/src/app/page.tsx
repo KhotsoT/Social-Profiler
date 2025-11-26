@@ -14,9 +14,31 @@ import { Influencer, SearchFilters } from '@/types/influencer'
 import { api, User } from '@/lib/api'
 import { useCurrency } from '@/contexts/CurrencyContext'
 
+// Exchange rates relative to USD for demo values
+const DEMO_RATES: Record<string, number> = {
+  'USD': 1, 'ZAR': 18.5, 'EUR': 0.92, 'GBP': 0.79, 'NGN': 1550,
+  'KES': 153, 'AED': 3.67, 'AUD': 1.53, 'BRL': 4.97, 'CAD': 1.36,
+  'GHS': 14.5, 'INR': 83.5, 'JPY': 149, 'CNY': 7.24,
+}
+
 export default function Home() {
   const router = useRouter()
-  const { formatAmount } = useCurrency()
+  const { selectedCurrency, getCurrencySymbol } = useCurrency()
+  
+  // Convert demo amounts to selected currency
+  const convertAmount = (usdAmount: number): string => {
+    const rate = DEMO_RATES[selectedCurrency] || 1
+    const converted = usdAmount * rate
+    const symbol = getCurrencySymbol(selectedCurrency)
+    
+    if (converted >= 1000000) {
+      return `${symbol}${(converted / 1000000).toFixed(1)}M+`
+    }
+    if (converted >= 1000) {
+      return `${symbol}${Math.round(converted).toLocaleString()}`
+    }
+    return `${symbol}${converted.toFixed(0)}`
+  }
   const [influencers, setInfluencers] = useState<Influencer[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -139,7 +161,7 @@ export default function Home() {
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">This Month</p>
-                      <p className="text-2xl font-bold text-slate-900">{formatAmount(12450)}</p>
+                      <p className="text-2xl font-bold text-slate-900">{convertAmount(12450)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-emerald-600 text-sm">
@@ -168,7 +190,7 @@ export default function Home() {
                     </div>
                     <div className="bg-slate-700/30 rounded-xl p-4">
                       <DollarSign className="w-8 h-8 text-green-400 mb-3" />
-                      <p className="text-3xl font-bold text-white">{formatAmount(2500000)}</p>
+                      <p className="text-3xl font-bold text-white">{convertAmount(2500000)}</p>
                       <p className="text-sm text-slate-400">Paid Out</p>
                     </div>
                   </div>
